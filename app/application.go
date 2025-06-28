@@ -1,10 +1,14 @@
 package app
 
 import (
+	"context"
 	"learning/app/controllers"
+	"learning/app/models"
 	"learning/config"
+	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/roonglit/credentials/pkg/credentials"
 )
 
@@ -15,8 +19,12 @@ type Application struct {
 func New() *Application {
 	config := loadConfig()
 
+	// database connection
+	store := connectDb(config)
+
 	server := controllers.New(
 		config,
+		store,
 	)
 
 	return &Application{
@@ -25,7 +33,8 @@ func New() *Application {
 }
 
 func (app *Application) Run() {
-
+	// Initialize the application components here
+	// For example, set up the database connection, start the server, etc.
 	app.Server.Run()
 }
 
@@ -39,4 +48,20 @@ func loadConfig() *config.Config {
 	}
 
 	return &config
+}
+
+func connectDb(config *config.Config) models.Store {
+	dbConfig, err := pgxpool.ParseConfig(config.DBUri)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Unable to parse DB_URI")
+	}
+
+	connPool, err := pgxpool.New(context.Background(), dbConfig.ConnString())
+	if err != nil {
+		log.Fatal().Err(err).Msg("cannot connect to db")
+	}
+
+	store := models.NewStore(connPool)
+
+	return store
 }

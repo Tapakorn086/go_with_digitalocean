@@ -1,24 +1,25 @@
 package controllers
 
 import (
-	"fmt"
+	"learning/app/models"
 	"learning/config"
 
 	"github.com/gin-gonic/gin"
-	"github.com/roonglit/credentials/pkg/credentials"
 )
 
 type Server struct {
 	Router *gin.Engine
 	Config *config.Config
+	Store  models.Store
 }
 
-func New(config *config.Config) *Server {
+func New(config *config.Config, store models.Store) *Server {
 	router := gin.Default()
 
 	server := &Server{
 		Router: router,
 		Config: config,
+		Store:  store,
 	}
 
 	server.SetupRoutes()
@@ -27,13 +28,5 @@ func New(config *config.Config) *Server {
 }
 
 func (s *Server) Run() {
-	reader := credentials.NewConfigReader()
-	var config config.Config
-	if err := reader.Read("debug", &config); err != nil {
-		panic(err)
-	}
-	fmt.Println("ServerAddress:", config.ServerAddress)
-
-	fmt.Println("ServerAddress:", s.Config.ServerAddress)
 	s.Router.Run(s.Config.ServerAddress)
 }
